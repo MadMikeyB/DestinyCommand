@@ -199,8 +199,9 @@ class Action
                     'filter' => 'getCharacterEquipment',
                     'options' => (object) [
                         'perks' => $bPerks,
+                        'includeCosmetics' => $strTitle !== 'gear',
                         'params' => [
-                            'components' => [205, 305, 300],
+                            'components' => [205, 304, 305, 300],
                         ],
                         'latest' => true,
                         'field' => $xField,

@@ -100,6 +100,7 @@ class CommandCatalog
             'ship',
             'clan',
             'classitem',
+            'artifact',
             'emblem',
             'emote',
             'aura',

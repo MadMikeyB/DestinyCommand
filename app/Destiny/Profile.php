@@ -68,6 +68,7 @@ class Profile
     {
         $aRes = [];
         $bPerks = $oOptions->perks ?? false;
+        $includeCosmetics = $oOptions->includeCosmetics ?? false;
         $iLatest = false;
         if ($oOptions->latest) {
             $iLatest = $this->getLatestCharacterId();
@@ -81,9 +82,10 @@ class Profile
             $oInventoryFilter = new InventoryFilter(
                 $this->characterEquipment->data->{$iCharacterId}->items,
                 $this->itemComponents->instances->data,
-                $this->itemComponents->sockets->data
+                $this->itemComponents->sockets->data,
+                $this->itemComponents->stats->data ?? (object) []
             );
-            $aRes[$iCharacterId] = $oInventoryFilter->getItems($oOptions->field, $bPerks);
+            $aRes[$iCharacterId] = $oInventoryFilter->getItems($oOptions->field, $bPerks, $includeCosmetics);
         }
 
         return $aRes;

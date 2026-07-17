@@ -30,6 +30,15 @@ class CommandQueryTest extends TestCase
         $this->assertSame(['primary', 'secondary', 'heavy'], $query->actions['weapons']->options->field);
     }
 
+    public function test_it_parses_artifact_as_a_supported_gear_action(): void
+    {
+        $query = new Query('artifact Guardian Name xbox');
+
+        $this->assertTrue($query->reqUser);
+        $this->assertArrayHasKey('artifact', $query->actions);
+        $this->assertSame(['artifact'], $query->actions['artifact']->options->field);
+    }
+
     public function test_it_supports_per_gamertag_console_overrides(): void
     {
         $query = new Query('kd Guardian One:ps;Guardian Two:steam xbox');

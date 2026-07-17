@@ -19,7 +19,7 @@ class BungieProviderTest extends TestCase
         ], true);
 
         $this->assertNull($result);
-        $this->assertSame([[1, 99, [205, 305, 300, 200]]], $client->profileCalls);
+        $this->assertSame([[1, 99, [205, 304, 305, 300, 200]]], $client->profileCalls);
     }
 
     public function test_kd_prepare_flow_returns_null_and_queues_historical_stats(): void

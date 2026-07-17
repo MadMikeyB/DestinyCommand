@@ -15,6 +15,7 @@ enum InventoryBucket: string
     case CHEST = 'chest';
     case LEGS = 'legs';
     case CLASS_ITEM = 'classitem';
+    case ARTIFACT = 'artifact';
     case GHOST = 'ghost';
     case VEHICLE = 'vehicle';
     case SHIP = 'ship';
@@ -38,6 +39,7 @@ enum InventoryBucket: string
             self::CHEST => 14239492,
             self::LEGS => 20886954,
             self::CLASS_ITEM => 1585787867,
+            self::ARTIFACT => 1506418338,
             self::GHOST => 4023194814,
             self::VEHICLE => 2025709351,
             self::SHIP => 284967655,

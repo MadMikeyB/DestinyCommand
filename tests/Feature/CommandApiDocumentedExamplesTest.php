@@ -33,7 +33,36 @@ class CommandApiDocumentedExamplesTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('@Viewer:');
-        $response->assertSeeText('xgerhard: Rose [2000] [Rapid Hit].');
+        $response->assertSeeText('xgerhard: Rose [2000] [Rapid Hit] [Default Shader, Default Ornament].');
+    }
+
+    public function test_armor_commands_include_stats_and_set_bonuses(): void
+    {
+        $response = $this->get('/api/command?query=helmet%20xgerhard%231234%20xbox&user=Viewer');
+
+        $response->assertOk();
+        $response->assertSeeText('@Viewer:');
+        $response->assertSeeText("xgerhard: Techeun's Regalia Helmet [2000] [Mobility 2, Resilience 20, Recovery 12, Discipline 9, Intellect 10, Strength 15] [Empty Mod Socket] [Default Shader, Default Ornament] [Set: Techeun's Regalia (2 equipped)].");
+    }
+
+    public function test_aggregate_gear_command_does_not_include_shader_or_ornament(): void
+    {
+        $response = $this->get('/api/command?query=gear%20xgerhard%231234%20xbox&user=Viewer');
+
+        $response->assertOk();
+        $response->assertSeeText('@Viewer:');
+        $response->assertSeeText("xgerhard: Techeun's Regalia Helmet [2000] [Mobility 2, Resilience 20, Recovery 12, Discipline 9, Intellect 10, Strength 15] [Empty Mod Socket] [Set: Techeun's Regalia (2 equipped)], Techeun's Regalia Chest [1999] [Mobility 2, Resilience 20, Recovery 12, Discipline 9, Intellect 10, Strength 15] [Empty Mod Socket] [Set: Techeun's Regalia (2 equipped)].");
+        $response->assertDontSeeText('Default Shader');
+        $response->assertDontSeeText('Default Ornament');
+    }
+
+    public function test_artifact_command_returns_the_equipped_artifact(): void
+    {
+        $response = $this->get('/api/command?query=artifact%20xgerhard%231234%20xbox&user=Viewer');
+
+        $response->assertOk();
+        $response->assertSeeText('@Viewer:');
+        $response->assertSeeText('xgerhard: Slayer Baron Apothecary Satchel [2000] [Piercing Sidearms].');
     }
 
     public function test_documented_kd_example_executes_end_to_end(): void
@@ -89,7 +118,7 @@ class CommandApiDocumentedExamplesTest extends TestCase
 
         $primaryResponse->assertOk();
         $primaryResponse->assertSeeText('@Viewer:');
-        $primaryResponse->assertSeeText('xgerhard: Rose [2000] [Rapid Hit].');
+        $primaryResponse->assertSeeText('xgerhard: Rose [2000] [Rapid Hit] [Default Shader, Default Ornament].');
     }
 
     public function test_documented_bot_query_string_shapes_execute_end_to_end(): void
@@ -130,7 +159,94 @@ class FakeFeatureBungieProvider extends BungieProvider
         if ($oAction->key === 'primary') {
             return [
                 $resultKey => [
-                    'character-1' => [new FakeEquipmentItem('Rose', 2000, ['Rapid Hit'])],
+                    'character-1' => [new FakeEquipmentItem('Rose', 2000, $this->perksForAction($oAction, ['Rapid Hit']))],
+                ],
+            ];
+        }
+
+        if ($oAction->key === 'helmet') {
+            return [
+                $resultKey => [
+                    'character-1' => [new FakeEquipmentItem(
+                        "Techeun's Regalia Helmet",
+                        2000,
+                        $this->perksForAction($oAction, ['Empty Mod Socket']),
+                        [
+                            'Mobility' => 2,
+                            'Resilience' => 20,
+                            'Recovery' => 12,
+                            'Discipline' => 9,
+                            'Intellect' => 10,
+                            'Strength' => 15,
+                        ],
+                        [
+                            'name' => "Techeun's Regalia",
+                            'equippedCount' => 2,
+                            'bonuses' => [
+                                ['required' => 2, 'name' => 'Queensfoil Rush'],
+                                ['required' => 4, 'name' => 'Truth to Power'],
+                            ],
+                        ],
+                    )],
+                ],
+            ];
+        }
+
+        if ($oAction->key === 'gear') {
+            return [
+                $resultKey => [
+                    'character-1' => [
+                        new FakeEquipmentItem(
+                            "Techeun's Regalia Helmet",
+                            2000,
+                            $this->perksForAction($oAction, ['Empty Mod Socket']),
+                            [
+                                'Mobility' => 2,
+                                'Resilience' => 20,
+                                'Recovery' => 12,
+                                'Discipline' => 9,
+                                'Intellect' => 10,
+                                'Strength' => 15,
+                            ],
+                            [
+                                'name' => "Techeun's Regalia",
+                                'equippedCount' => 2,
+                                'bonuses' => [
+                                    ['required' => 2, 'name' => 'Queensfoil Rush'],
+                                    ['required' => 4, 'name' => 'Truth to Power'],
+                                ],
+                            ],
+                        ),
+                        new FakeEquipmentItem(
+                            "Techeun's Regalia Chest",
+                            1999,
+                            $this->perksForAction($oAction, ['Empty Mod Socket']),
+                            [
+                                'Mobility' => 2,
+                                'Resilience' => 20,
+                                'Recovery' => 12,
+                                'Discipline' => 9,
+                                'Intellect' => 10,
+                                'Strength' => 15,
+                            ],
+                            [
+                                'name' => "Techeun's Regalia",
+                                'equippedCount' => 2,
+                                'bonuses' => [
+                                    ['required' => 2, 'name' => 'Queensfoil Rush'],
+                                    ['required' => 4, 'name' => 'Truth to Power'],
+                                ],
+                            ],
+                        ),
+                    ],
+                ],
+            ];
+        }
+
+        if ($oAction->key === 'artifact') {
+            return [
+                $resultKey => [
+                    'character-1' => [new FakeEquipmentItem('Slayer Baron Apothecary Satchel', 2000, ['Piercing Sidearms'])],
                 ],
             ];
         }
@@ -149,6 +265,15 @@ class FakeFeatureBungieProvider extends BungieProvider
             ],
         ];
     }
+
+    private function perksForAction(object $action, array $basePerks): array
+    {
+        if (($action->options->includeCosmetics ?? false) === false) {
+            return $basePerks;
+        }
+
+        return array_merge($basePerks, ['Default Shader', 'Default Ornament']);
+    }
 }
 
 class FakeEquipmentItem extends EquipmentItem
@@ -157,5 +282,7 @@ class FakeEquipmentItem extends EquipmentItem
         public string $name,
         public int $light,
         public array $perks = [],
+        public array $stats = [],
+        public ?array $setBonuses = null,
     ) {}
 }

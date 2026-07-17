@@ -30,8 +30,34 @@ class CommandActionTest extends TestCase
         $this->assertSame('profile', $action->endpoint);
         $this->assertSame('getCharacterEquipment', $action->filter);
         $this->assertTrue($action->options->perks);
+        $this->assertTrue($action->options->includeCosmetics);
         $this->assertTrue($action->options->latest);
         $this->assertSame(['primary'], $action->options->field);
+        $this->assertSame([205, 304, 305, 300], $action->options->params['components']);
+    }
+
+    public function test_it_builds_artifact_as_a_profile_equipment_action(): void
+    {
+        $action = new Action('artifact');
+
+        $this->assertSame('artifact', $action->key);
+        $this->assertSame(BungieProvider::class, $action->provider);
+        $this->assertSame('profile', $action->endpoint);
+        $this->assertSame('getCharacterEquipment', $action->filter);
+        $this->assertTrue($action->options->perks);
+        $this->assertTrue($action->options->includeCosmetics);
+        $this->assertTrue($action->options->latest);
+        $this->assertSame(['artifact'], $action->options->field);
+    }
+
+    public function test_it_does_not_include_cosmetics_for_aggregate_gear_action(): void
+    {
+        $action = new Action('gear');
+
+        $this->assertSame('gear', $action->key);
+        $this->assertFalse($action->options->perks);
+        $this->assertFalse($action->options->includeCosmetics);
+        $this->assertSame(['helmet', 'gauntlet', 'chest', 'legs'], $action->options->field);
     }
 
     public function test_it_resolves_action_aliases_before_building_stats_actions(): void

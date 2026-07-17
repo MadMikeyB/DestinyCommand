@@ -14,6 +14,15 @@ use App\Destiny\TrialsReportFireteamReport;
  */
 class CommandResponseFormatter
 {
+    private const MAX_RESPONSE_LENGTH = 400;
+
+    private const EMPTY_MOD_SOCKET = 'Empty Mod Socket';
+
+    private const COSMETIC_PERKS = [
+        'Default Shader',
+        'Default Ornament',
+    ];
+
     private const CLASSES = [
         671679327 => 'Hunter',
         2271682572 => 'Warlock',
@@ -51,13 +60,25 @@ class CommandResponseFormatter
             $response .= '```';
         }
 
+        if (mb_strlen($response) > self::MAX_RESPONSE_LENGTH && $this->isGearCommand($command)) {
+            $response = $this->formatWithCompressionModes($command, $result, $prep, $displayUsername, $displayGamertag, 'keep', 'short');
+        }
+
+        if (mb_strlen($response) > self::MAX_RESPONSE_LENGTH) {
+            $response = $this->formatWithCompressionModes($command, $result, $prep, $displayUsername, $displayGamertag, 'collapse', $this->isGearCommand($command) ? 'short' : 'full');
+        }
+
+        if (mb_strlen($response) > self::MAX_RESPONSE_LENGTH) {
+            $response = $this->formatWithCompressionModes($command, $result, $prep, $displayUsername, $displayGamertag, 'remove', $this->isGearCommand($command) ? 'short' : 'full');
+        }
+
         return $response;
     }
 
     /**
      * Format all per-player response data into a single output string.
      */
-    private function formatPlayerResults(array $result, array $prep, bool $displayGamertag): string
+    private function formatPlayerResults(array $result, array $prep, bool $displayGamertag, string $perkCompression = 'keep', string $statLabelMode = 'full'): string
     {
         $response = '';
 
@@ -85,6 +106,8 @@ class CommandResponseFormatter
                         $found,
                         $result,
                         $resultKey,
+                        $perkCompression,
+                        $statLabelMode,
                     );
 
                     if ($characterResponse === '__SKIP__') {
@@ -119,7 +142,7 @@ class CommandResponseFormatter
     /**
      * Append a single result item to the current character response.
      */
-    private function appendCharacterItem(string|bool $characterResponse, mixed $item, bool $found, array $result, string $resultKey): array
+    private function appendCharacterItem(string|bool $characterResponse, mixed $item, bool $found, array $result, string $resultKey, string $perkCompression = 'keep', string $statLabelMode = 'full'): array
     {
         $stat = null;
 
@@ -129,8 +152,19 @@ class CommandResponseFormatter
                 if (isset($item->light) && $item->light > 50) {
                     $characterResponse .= ' ['.$item->light.']';
                 }
-                if (isset($item->perks) && ! empty($item->perks)) {
-                    $characterResponse .= ' ['.implode(', ', $item->perks).']';
+                if (! empty($item->stats)) {
+                    $characterResponse .= ' ['.$this->formatEquipmentStats($item->stats, $statLabelMode).']';
+                }
+                $perks = isset($item->perks) ? $this->filterEquipmentPerks($item->perks, $perkCompression) : [];
+                [$standardPerks, $cosmeticPerks] = $this->splitCosmeticPerks($perks);
+                if (! empty($standardPerks)) {
+                    $characterResponse .= ' ['.implode(', ', $standardPerks).']';
+                }
+                if (! empty($cosmeticPerks)) {
+                    $characterResponse .= ' ['.implode(', ', $cosmeticPerks).']';
+                }
+                if (isset($item->setBonuses) && ! empty($item->setBonuses['bonuses'])) {
+                    $characterResponse .= ' ['.$this->formatSetBonuses($item->setBonuses).']';
                 }
                 $characterResponse .= ', ';
                 $found = true;
@@ -278,5 +312,130 @@ class CommandResponseFormatter
         }
 
         return $gamertag;
+    }
+
+    /**
+     * Format armor stat rolls for compact chat output.
+     */
+    private function formatEquipmentStats(array $stats, string $statLabelMode = 'full'): string
+    {
+        $labels = [
+            'Weapons' => $statLabelMode === 'short' ? 'W' : 'Weapons',
+            'Health' => $statLabelMode === 'short' ? 'H' : 'Health',
+            'Class' => $statLabelMode === 'short' ? 'C' : 'Class',
+            'Grenade' => $statLabelMode === 'short' ? 'G' : 'Grenade',
+            'Super' => $statLabelMode === 'short' ? 'S' : 'Super',
+            'Melee' => $statLabelMode === 'short' ? 'M' : 'Melee',
+            'Mobility' => 'Mobility',
+            'Resilience' => 'Resilience',
+            'Recovery' => 'Recovery',
+            'Discipline' => 'Discipline',
+            'Intellect' => 'Intellect',
+            'Strength' => 'Strength',
+        ];
+
+        $formatted = [];
+
+        foreach ($labels as $name => $label) {
+            if (! isset($stats[$name])) {
+                continue;
+            }
+
+            $formatted[] = $label.' '.$stats[$name];
+        }
+
+        return implode(', ', $formatted);
+    }
+
+    /**
+     * Format equipable item set bonuses for compact chat output.
+     *
+     * @param  array{name: string, equippedCount: int, bonuses: array<int, array{required: int, name: string}>}  $setBonuses
+     */
+    private function formatSetBonuses(array $setBonuses): string
+    {
+        return 'Set: '.$setBonuses['name'].' ('.$setBonuses['equippedCount'].' equipped)';
+    }
+
+    /**
+     * Re-render the response while stripping empty armor mod slots when needed to stay under the chat limit.
+     */
+    private function formatWithCompressionModes(CommandContext $command, array $result, array $prep, bool $displayUsername, bool $displayGamertag, string $perkCompression, string $statLabelMode): string
+    {
+        $response = $displayUsername ? '@'.$command->responseUser.': ' : '';
+
+        if ($command->platform === 'discord') {
+            $response .= '```';
+        }
+
+        if (isset($result['players']) && ! empty($result['players'])) {
+            $response .= $this->formatPlayerResults($result, $prep, $displayGamertag, $perkCompression, $statLabelMode);
+        } elseif (! isset($result['response']['text']) && ! empty($result['response']) && is_array($result['response'])) {
+            $response .= $this->formatInventoryResults($result['response']);
+        }
+
+        if (isset($result['response']['text'])) {
+            $response .= ' '.implode(',', $result['response']['text']);
+        }
+
+        $response .= '.';
+
+        if ($command->platform === 'discord') {
+            $response .= '```';
+        }
+
+        return $response;
+    }
+
+    /**
+     * Apply armor empty-mod compression rules for chat-length safeguards.
+     */
+    private function filterEquipmentPerks(array $perks, string $perkCompression): array
+    {
+        if ($perkCompression === 'keep') {
+            return $perks;
+        }
+
+        $emptyModSockets = count(array_filter($perks, fn (string $perk): bool => $perk === self::EMPTY_MOD_SOCKET));
+        $filteredPerks = array_values(array_filter($perks, fn (string $perk): bool => $perk !== self::EMPTY_MOD_SOCKET));
+
+        if ($perkCompression === 'remove' || $emptyModSockets === 0) {
+            return $filteredPerks;
+        }
+
+        array_unshift($filteredPerks, $emptyModSockets.'x '.self::EMPTY_MOD_SOCKET);
+
+        return $filteredPerks;
+    }
+
+    /**
+     * Split standard perks/mods from cosmetic shader and ornament plugs.
+     *
+     * @return array{0: array<int, string>, 1: array<int, string>}
+     */
+    private function splitCosmeticPerks(array $perks): array
+    {
+        $standardPerks = [];
+        $cosmeticPerks = [];
+
+        foreach ($perks as $perk) {
+            if (in_array($perk, self::COSMETIC_PERKS, true)) {
+                $cosmeticPerks[] = $perk;
+
+                continue;
+            }
+
+            $standardPerks[] = $perk;
+        }
+
+        return [$standardPerks, $cosmeticPerks];
+    }
+
+    /**
+     * Detect the multi-piece armor `gear` command so overflow shortening stays scoped.
+     */
+    private function isGearCommand(CommandContext $command): bool
+    {
+        return isset($command->query->actions['gear']);
     }
 }

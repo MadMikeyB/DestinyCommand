@@ -14,6 +14,7 @@ Route::get('/auth/nightbot/callback', [NightbotController::class, 'handleNightbo
 Route::get('/auth/Bungie', [BungieController::class, 'legacyBungieAuth']);
 Route::get('/auth/Nightbot', [NightbotController::class, 'legacyNightbotAuth']);
 Route::get('/auth/{service}', [AuthController::class, 'authHandler']);
+Route::get('/live/api/command', [CommandController::class, 'parseRequest']);
 Route::get('/api/command', [CommandController::class, 'parseRequest']);
 Route::match(['get', 'post'], '/tools/bungienameconverter', [BungieNameConverterController::class, 'convert']);
 
