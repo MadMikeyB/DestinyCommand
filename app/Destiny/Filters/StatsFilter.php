@@ -4,34 +4,50 @@ namespace App\Destiny\Filters;
 
 use App\Destiny\Stat;
 
+/**
+ * Filters Bungie historical stats payloads into command-ready values.
+ */
 class StatsFilter
 {
     private $playlist;
 
-    private $timePeriod;
-
     private $stats = [];
 
-    public function __construct($oStats)
+    /**
+     * Build a stats filter from a raw historical stats response.
+     */
+    public function __construct(object $oStats)
     {
+        $oPlaylist = null;
+        $oStatsObject = null;
+
         foreach ($oStats as $strPlaylist => $oPlaylist) {
             break;
         }
 
         if (empty((array) $oPlaylist)) {
-            return false;
+            return;
         }
+
         $this->playlist = $strPlaylist;
 
-        foreach ($oPlaylist as $strTimePeriod => $oStatsObject);
-        $this->timePeriod = $strTimePeriod;
+        foreach ($oPlaylist as $oStatsObject) {
+            break;
+        }
+
+        if (! is_object($oStatsObject)) {
+            return;
+        }
 
         foreach ($oStatsObject as $strKey => $oStat) {
             $this->stats[$strKey] = $oStat;
         }
     }
 
-    public function getStats($aSearchItems)
+    /**
+     * Resolve one or more requested stat values.
+     */
+    public function getStats(array|string $aSearchItems): array|Stat|false
     {
         $bArray = true;
         if (! is_array($aSearchItems)) {

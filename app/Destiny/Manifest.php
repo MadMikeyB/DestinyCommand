@@ -2,21 +2,81 @@
 
 namespace App\Destiny;
 
-use GuzzleHttp\Client;
+use App\Transports\BungieTransport;
+use Exception;
+use Illuminate\Support\Facades\Log;
 use SQLite3;
 use ZipArchive;
 
+/**
+ * Coordinates Destiny manifest downloads, settings, and lookups.
+ */
 class Manifest
 {
+    /**
+     * Create a new manifest manager instance.
+     */
     public function __construct()
     {
         $this->manifest_path = storage_path().'/manifest/';
         $this->setting_file = $this->manifest_path.'settings.json';
+        $this->ensureManifestDirectoryExists();
         $this->settings = $this->loadSettings();
-        // echo $this->check(); die;
     }
 
-    public function check()
+    /**
+     * Ensure the manifest storage directory exists.
+     */
+    private function ensureManifestDirectoryExists(): void
+    {
+        if (! file_exists($this->manifest_path)) {
+            mkdir($this->manifest_path, 0777, true);
+        }
+    }
+
+    /**
+     * Ensure the local manifest cache and metadata are available.
+     */
+    private function ensureManifestReady(): void
+    {
+        $database = $this->getSetting('database');
+        $tables = $this->getSetting('tables');
+
+        if ($database && is_object($tables)) {
+            $cacheFilePath = $this->cacheFilePath($database);
+
+            if (file_exists($cacheFilePath)) {
+                return;
+            }
+        }
+
+        Log::info('Manifest cache missing or incomplete, attempting refresh.');
+        $result = $this->check();
+
+        Log::info('Manifest refresh result', [
+            'result' => $result,
+        ]);
+
+        $database = $this->getSetting('database');
+        $tables = $this->getSetting('tables');
+        $cacheFilePath = $database ? $this->cacheFilePath($database) : null;
+
+        if (! $database || ! is_object($tables) || ! $cacheFilePath || ! file_exists($cacheFilePath)) {
+            Log::error('DC530 manifest cache is not available after refresh attempt', [
+                'code' => 'DC530',
+                'database' => $database,
+                'cache_file' => $cacheFilePath,
+                'tables_type' => gettype($tables),
+            ]);
+
+            throw new Exception('Manifest is not initialized (#DC530)');
+        }
+    }
+
+    /**
+     * Download and refresh the local manifest when Bungie publishes a new one.
+     */
+    public function check(): string
     {
         $oBungie = new DestinyClient;
         $oBungie->getDestinyManifest();
@@ -40,21 +100,18 @@ class Manifest
         }
     }
 
-    private function updateManifest($strDatabase)
+    /**
+     * Download, extract, and inspect a new manifest database.
+     */
+    private function updateManifest(string $strDatabase): array
     {
-        $oGuzzle = new Client([
-            'http_errors' => false,
-            'verify' => false,
-            'headers' => [
-                'X-API-Key' => config('destinycommand.bungie_api_key'),
-                'Origin' => config('destinycommand.request_origin'),
-                'User-Agent' => config('destinycommand.user_agent'),
-            ],
-        ]);
+        $response = (new BungieTransport)
+            ->pendingRequest(includeOrigin: true)
+            ->get('https://bungie.net'.$strDatabase);
 
-        $zData = $oGuzzle->get('https://bungie.net'.$strDatabase)->getBody();
+        $zData = $response->body();
 
-        $strCachePath = $this->manifest_path.'cache/'.pathinfo($strDatabase, PATHINFO_BASENAME);
+        $strCachePath = $this->cacheFilePath($strDatabase);
         if (! file_exists(dirname($strCachePath))) {
             mkdir(dirname($strCachePath), 0777, true);
         }
@@ -82,7 +139,10 @@ class Manifest
         return $aTables;
     }
 
-    public function loadSettings()
+    /**
+     * Load persisted manifest settings.
+     */
+    public function loadSettings(): object
     {
         if (! file_exists($this->setting_file)) {
             return (object) [];
@@ -91,13 +151,20 @@ class Manifest
         return json_decode(file_get_contents($this->setting_file));
     }
 
-    public function setSetting($name, $value)
+    /**
+     * Persist a manifest setting value.
+     */
+    public function setSetting(string $name, mixed $value): void
     {
+        $this->ensureManifestDirectoryExists();
         $this->settings->{$name} = $value;
         file_put_contents($this->setting_file, json_encode($this->settings));
     }
 
-    public function getSetting($name)
+    /**
+     * Read a manifest setting value.
+     */
+    public function getSetting(string $name): mixed
     {
         if (isset($this->settings->{$name})) {
             return $this->settings->{$name};
@@ -106,38 +173,63 @@ class Manifest
         return '';
     }
 
-    public function queryManifest($strQuery)
+    /**
+     * Run a read-only query against the local manifest database.
+     */
+    public function queryManifest(string $strQuery): array
     {
-        $strDatabase = $this->getSetting('database');
-        $strCacheFilePath = $this->manifest_path.'cache/'.pathinfo($strDatabase, PATHINFO_BASENAME);
+        return $this->repository()->query($strQuery);
+    }
 
-        $aResults = [];
-        if ($db = new SQLite3($strCacheFilePath)) {
-            $oResult = $db->query($strQuery);
-            while ($aRow = $oResult->fetchArray()) {
-                $strKey = is_numeric($aRow[0]) ? sprintf('%u', $aRow[0] & 0xFFFFFFFF) : $aRow[0];
-                $aResults[$strKey] = json_decode($aRow[1]);
-            }
+    /**
+     * Browse all rows in a manifest definition table.
+     */
+    public function browseDefinition(string $strTableName): array
+    {
+        return $this->repository()->browseDefinition($strTableName);
+    }
+
+    /**
+     * Resolve a single manifest definition by table suffix and id.
+     */
+    public function getDefinition(string $strTableName, int|string $id): object|false
+    {
+        $this->ensureManifestReady();
+
+        $aTables = $this->getSetting('tables');
+        $definitionTableName = 'Destiny'.$strTableName.'Definition';
+
+        if (! is_object($aTables) || ! isset($aTables->{$definitionTableName}[0])) {
+            Log::error('DC531 manifest table metadata missing', [
+                'code' => 'DC531',
+                'table' => $definitionTableName,
+                'tables_type' => gettype($aTables),
+            ]);
+
+            throw new Exception('Manifest table metadata is missing (#DC531)');
         }
 
-        return $aResults;
+        return $this->repository()->getDefinition($strTableName, $id);
     }
 
-    public function browseDefinition($strTableName)
+    /**
+     * Build a repository for the currently configured manifest database.
+     */
+    private function repository(): ManifestRepository
     {
-        return $this->queryManifest('SELECT * FROM '.$strTableName);
+        $this->ensureManifestReady();
+
+        return new ManifestRepository(
+            $this->cacheFilePath($this->getSetting('database')),
+            $this->getSetting('tables'),
+        );
     }
 
-    public function getDefinition($strTableName, $id)
+    /**
+     * Resolve the local cache file path for a manifest database URL.
+     */
+    private function cacheFilePath(string $database): string
     {
-        $strTableName = 'Destiny'.$strTableName.'Definition';
-        $aTables = $this->getSetting('tables');
-
-        $strKey = $aTables->{$strTableName}[0];
-        $strWhere = ' WHERE '.(is_numeric($id) ? $strKey.'='.$id.' OR '.$strKey.'='.($id - 4294967296) : $strKey.'="'.$id.'"');
-        $aResults = $this->queryManifest('SELECT * FROM '.$strTableName.$strWhere);
-
-        // Typecast to string since floats mess up index
-        return isset($aResults[(string) $id]) ? $aResults[(string) $id] : false;
+        return $this->manifest_path.'cache/'.pathinfo($database, PATHINFO_BASENAME);
     }
 }

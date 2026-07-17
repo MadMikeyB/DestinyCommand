@@ -2,27 +2,33 @@
 
 namespace App\Destiny;
 
+/**
+ * Represents a formatted Trials Report fireteam member summary.
+ */
 class TrialsReportFireteamReport
 {
-    public $displayName;
+    public string $displayName;
 
-    public $kills;
+    public int|float $kills;
 
-    public $deaths;
+    public int|float $deaths;
 
-    public $assists;
+    public int|float $assists;
 
-    public $winp;
+    public int|float|string $winp;
 
-    public $kd;
+    public int|float|string $kd;
 
-    public $kda;
+    public int|float|string $kda;
 
-    public $games;
+    public int|float $games;
 
-    public $flawless;
+    public int|float $flawless;
 
-    public function __construct($oStatReport)
+    /**
+     * Build a report item from the upstream Trials Report payload.
+     */
+    public function __construct(object $oStatReport)
     {
         $this->displayName = $oStatReport->displayName;
         $this->kills = $oStatReport->kills;

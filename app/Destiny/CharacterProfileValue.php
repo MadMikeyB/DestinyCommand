@@ -2,27 +2,34 @@
 
 namespace App\Destiny;
 
+use App\Enums\CharacterProfileField;
+
+/**
+ * Represents a formatted per-character profile field value.
+ */
 class CharacterProfileValue
 {
-    public $displayValue;
+    public mixed $displayValue;
 
-    public $title;
+    public string $title;
 
-    public $classHash;
+    public int|string $classHash;
 
-    public function __construct($strKey, $xValue, $strClassHash)
+    /**
+     * Build a character profile value from a raw Bungie field.
+     */
+    public function __construct(string $strKey, mixed $xValue, int|string $strClassHash)
     {
         $this->displayValue = $xValue;
         $this->title = $this->getTitle($strKey);
         $this->classHash = $strClassHash;
     }
 
-    private function getTitle($strKey)
+    /**
+     * Resolve a display title for the given profile field.
+     */
+    private function getTitle(string $strKey): string
     {
-        $aTitles = [
-            'light' => 'Power level',
-        ];
-
-        return $aTitles[$strKey] ?? '';
+        return CharacterProfileField::tryFrom($strKey)?->title() ?? '';
     }
 }

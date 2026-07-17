@@ -2,41 +2,82 @@
 
 namespace App\Command;
 
+use App\Enums\CommandEndpoint;
+use App\Enums\CommandProvider;
+
+/**
+ * Resolves a raw action token into a normalized command definition.
+ */
 class Action
 {
-    public function __construct($strAction)
+    public string $key;
+
+    public string $provider;
+
+    public ?string $title = null;
+
+    public ?string $text = null;
+
+    public ?string $endpoint = null;
+
+    public ?string $filter = null;
+
+    public bool $noUser = false;
+
+    public ?object $options = null;
+
+    /**
+     * Build a normalized action definition from a raw action token.
+     */
+    public function __construct(string $strAction)
     {
         $aAction = false;
         $strAction = $this->getAlias($strAction);
-        $aFunctions = ['isTextCommand', 'isTrialsReportCommand', 'isVendorCommand', 'isGearCommand', 'isCharacterProfileCommand', 'isCharacterProgressionCommand', 'isStatCommand'];
-        foreach ($aFunctions as $strFunction) {
+        foreach ($this->actionResolvers() as $strFunction) {
             $aAction = $this->{$strFunction}($strAction);
             if ($aAction !== false) {
                 break;
             }
         }
 
-        if ($aAction == false || is_null($aAction)) {
+        if ($aAction === false || is_null($aAction)) {
             $aAction = $this->isTextCommand('default_info');
         }
+
+        $this->hydrate($aAction);
+    }
+
+    /**
+     * Get the ordered list of action resolvers.
+     */
+    private function actionResolvers(): array
+    {
+        return ['isTextCommand', 'isTrialsReportCommand', 'isVendorCommand', 'isGearCommand', 'isCharacterProfileCommand', 'isCharacterProgressionCommand', 'isStatCommand'];
+    }
+
+    /**
+     * Hydrate the action object from a resolved definition array.
+     */
+    private function hydrate(array $aAction): void
+    {
         foreach ($aAction as $k => $v) {
             $this->$k = $v;
         }
     }
 
-    private function isVendorCommand($strAction)
+    /**
+     * Resolve vendor commands.
+     */
+    private function isVendorCommand(string $strAction): array|false
     {
-        // vendor => hash
-        $aVendorActions = [
-            'xur' => 2190858386,
-        ];
+        $aVendorActions = CommandCatalog::vendorActions();
 
         if (isset($aVendorActions[$strAction])) {
             return [
                 'key' => $strAction,
                 'title' => $strAction,
-                'provider' => 'BungieProvider',
-                'endpoint' => 'vendor',
+                'provider' => CommandProvider::BUNGIE->value,
+                'endpoint' => CommandEndpoint::VENDOR->value,
                 'filter' => 'getSales',
                 'noUser' => true,
                 'options' => (object) [
@@ -51,21 +92,19 @@ class Action
         return false;
     }
 
-    private function isCharacterProgressionCommand($strAction)
+    /**
+     * Resolve character progression commands.
+     */
+    private function isCharacterProgressionCommand(string $strAction): array|false
     {
-        $aProgressions = [
-            'card' => (object) [
-                'latest' => true,
-                'progressions' => [1062449239, 2093709363],
-            ],
-        ];
+        $aProgressions = CommandCatalog::characterProgressions();
 
         if (isset($aProgressions[$strAction])) {
             return [
                 'key' => $strAction,
                 'title' => $strAction,
-                'provider' => 'BungieProvider',
-                'endpoint' => 'profile',
+                'provider' => CommandProvider::BUNGIE->value,
+                'endpoint' => CommandEndpoint::PROFILE->value,
                 'filter' => 'getCharacterProgression',
                 'options' => (object) [
                     'params' => [
@@ -80,22 +119,23 @@ class Action
         return false;
     }
 
-    private function isCharacterProfileCommand($strAction)
+    /**
+     * Resolve character profile value commands.
+     */
+    private function isCharacterProfileCommand(string $strAction): array|false
     {
-        if (isset($strAction[0]) && $strAction[0] == 'c' && strlen($strAction) > 2) {
+        if (isset($strAction[0]) && $strAction[0] === 'c' && strlen($strAction) > 2) {
             $strAction = substr($strAction, 1);
         }
 
-        $aCharacterProfileActions = [
-            'powerlevel' => 'light',
-        ];
+        $aCharacterProfileActions = CommandCatalog::characterProfileActions();
 
         if (isset($aCharacterProfileActions[$strAction])) {
             return [
                 'key' => $strAction,
                 'title' => '',
-                'provider' => 'BungieProvider',
-                'endpoint' => 'profile',
+                'provider' => CommandProvider::BUNGIE->value,
+                'endpoint' => CommandEndpoint::PROFILE->value,
                 'filter' => 'getCharacterProfileValue',
                 'options' => (object) [
                     'field' => $aCharacterProfileActions[$strAction],
@@ -106,18 +146,18 @@ class Action
         return false;
     }
 
-    private function isTrialsReportCommand($strAction)
+    /**
+     * Resolve Trials Report commands.
+     */
+    private function isTrialsReportCommand(string $strAction): array|false
     {
-        $aTrialsReportActions = [
-            'trialsteam' => 'getFireteam',
-            'trialsweekly' => 'getFireteam',
-        ];
+        $aTrialsReportActions = CommandCatalog::trialsReportActions();
 
         if (isset($aTrialsReportActions[$strAction])) {
             return [
                 'key' => 'TrialsTeam',
                 'title' => 'TrialsTeam',
-                'provider' => 'TrialsReportProvider',
+                'provider' => CommandProvider::TRIALS_REPORT->value,
                 'endpoint' => $aTrialsReportActions[$strAction],
                 'filter' => 'getFireteamStats',
                 'options' => (object) [
@@ -129,28 +169,12 @@ class Action
         return false;
     }
 
-    private function isGearCommand($strAction)
+    /**
+     * Resolve equipment and loadout commands.
+     */
+    private function isGearCommand(string $strAction): array|false
     {
-        $aItemActions = [
-            'ghost',
-            'vehicle',
-            'ship',
-            'clan',
-            'classitem',
-            'emblem',
-            'emote',
-            'aura',
-            'subclass',
-            'primary',
-            'secondary',
-            'heavy',
-            'helmet',
-            'gauntlet',
-            'legs',
-            'chest',
-            'weapons' => ['primary', 'secondary', 'heavy'],
-            'gear' => ['helmet', 'gauntlet', 'chest', 'legs'],
-        ];
+        $aItemActions = CommandCatalog::gearActions();
 
         foreach ($aItemActions as $xKey => $xItemAction) {
             $c = false;
@@ -170,8 +194,8 @@ class Action
                 return [
                     'key' => $strTitle,
                     'title' => $strTitle,
-                    'provider' => 'BungieProvider',
-                    'endpoint' => 'profile',
+                    'provider' => CommandProvider::BUNGIE->value,
+                    'endpoint' => CommandEndpoint::PROFILE->value,
                     'filter' => 'getCharacterEquipment',
                     'options' => (object) [
                         'perks' => $bPerks,
@@ -188,322 +212,23 @@ class Action
         return false;
     }
 
-    private function isStatCommand($strAction)
+    /**
+     * Resolve stat and medal commands.
+     */
+    private function isStatCommand(string $strAction): array|false
     {
         $c = false;
-        $aStatActions = [
-            /* General stats */
-            'games' => 'activitiesEntered',
-            'wins' => 'activitiesWon',
-            'assists' => 'assists',
-            'tdd' => 'totalDeathDistance',
-            'avgdd' => 'averageDeathDistance',
-            'tkd' => 'totalKillDistance',
-            'avgkd' => 'averageKillDistance',
-            'time' => 'secondsPlayed',
-            'deaths' => 'deaths',
-            'kills' => 'kills',
-            'avgls' => 'averageLifespan',
-            'score' => 'score',
-            'avgspk' => 'averageScorePerKill',
-            'avgspl' => 'averageScorePerLife',
-            'mk' => 'bestSingleGameKills',
-            'bestscore' => 'bestSingleGameScore',
-            'kd' => 'killsDeathsRatio',
-            'kda' => 'killsDeathsAssists',
-            'pkills' => 'precisionKills',
-            'res' => 'resurrectionsPerformed',
-            'resres' => 'resurrectionsReceived',
-            'suicides' => 'suicides',
-            'fusion' => 'weaponKillsFusionRifle',
-            'handcannon' => 'weaponKillsHandCannon',
-            'auto' => 'weaponKillsAutoRifle',
-            'machinegun' => 'weaponKillsMachinegun',
-            'melee' => 'weaponKillsMelee',
-            'pulse' => 'weaponKillsPulseRifle',
-            'rocket' => 'weaponKillsRocketLauncher',
-            'scout' => 'weaponKillsScoutRifle',
-            'shotgun' => 'weaponKillsShotgun',
-            'sniper' => 'weaponKillsSniper',
-            'smg' => 'weaponKillsSubmachinegun',
-            'relic' => 'weaponKillsRelic',
-            'sidearm' => 'weaponKillsSideArm',
-            'sword' => 'weaponKillsSword',
-            'akills' => 'weaponKillsAbility',
-            'grenade' => 'weaponKillsGrenade',
-            'grenadelauncher' => 'weaponKillsGrenadeLauncher',
-            'bow' => 'weaponKillsBow',
-            'bestwep' => 'weaponBestType',
-            'wl' => 'winLossRatio',
-            'lks' => 'longestKillSpree',
-            'lsl' => 'longestSingleLife',
-            'mpk' => 'mostPrecisionKills',
-            'orbs' => 'orbsDropped',
-            'orbsg' => 'orbsGathered',
-            'cr' => 'combatRating',
-            'fastest' => 'fastestCompletionMs',
-            'lkd' => 'longestKillDistance',
-            /* Gambit only stats */
-            'invasions' => 'invasions',
-            'invasionkills' => 'invasionKills',
-            'invaderkills' => 'invaderKills',
-            'invaderdeaths' => 'invaderDeaths',
-            'primevalkills' => 'primevalKills',
-            'blockerkills' => 'blockerKills',
-            'mobkills' => 'mobKills',
-            'highvaluekills' => 'highValueKills',
-            'motespickedup' => 'motesPickedUp',
-            'motesdeposited' => 'motesDeposited',
-            'motesdenied' => 'motesDenied',
-            'motesdegraded' => 'motesDegraded',
-            'moteslost' => 'motesLost',
-            'bankoverage' => 'bankOverage',
-            'smallblockers' => 'smallBlockersSent',
-            'mediumblockers' => 'mediumBlockersSent',
-            'largeblockers' => 'largeBlockersSent',
-            'primevaldamage' => 'primevalDamage',
-            'primevalhealing' => 'primevalHealing',
-            'gbroundsplayed' => 'roundsPlayed',
-            'gbroundswon' => 'roundsWon',
-        ];
-
-        $aStatMedals = [
-            'hurricane' => 'medalAbilityFlowwalkerMulti',
-            'handfullofbullets' => 'medalAbilityGunslingerMulti',
-            'lethalinstinct' => 'medalAbilityGunslingerQuick',
-            'lightningstorm' => 'medalAbilityStormcallerMulti',
-            'bloodforblood' => 'medalAvenger',
-            'iliveherenow' => 'medalControlAdvantageHold',
-            'flagbearer' => 'medalControlMostAdvantage',
-            'gangsallhere' => 'medalCountdownRoundAllAlive',
-            'thecycle' => 'medalCycle',
-            'dodgethis' => 'medalDefeatHunterDodge',
-            'barricadebreaker' => 'medalDefeatTitanBrace',
-            'riftbreaker' => 'medalDefeatWarlockSigil',
-            'notonmywatch' => 'medalDefense',
-            'crushedthem' => 'medalMatchBlowout',
-            'fightme' => 'medalMatchMostDamage',
-            'timeandahalf' => 'medalMatchOvertime',
-            'undefeated' => 'medalMatchUndefeated',
-            'doubleplay' => 'medalMulti2x',
-            'tripleplay' => 'medalMulti3x',
-            'lightsout' => 'medalMulti4x',
-            'annihilation' => 'medalMultiEntireTeam',
-            'bestservedcold' => 'medalPayback',
-            'quickstrike' => 'medalQuickStrike',
-            'unyielding' => 'medalStreak10x',
-            'ruthless' => 'medalStreak5x',
-            'weranoutofmedals' => 'medalStreakAbsurd',
-            'combinedfire' => 'medalStreakCombined',
-            'shutdown' => 'medalStreakShutdown',
-            'wreckingcrew' => 'medalStreakTeam',
-            'notsofastmyfriend' => 'medalSuperShutdown',
-            'mycrestismyown' => 'medalSupremacyNeverCollected',
-            'safeandsecured' => 'medalSupremacySecureStreak',
-            'survivor' => 'medalSurvivalUndefeated',
-            'assaultspecialist' => 'medalWeaponAuto',
-            'coldfusion' => 'medalWeaponFusion',
-            'directhit' => 'medalWeaponGrenade',
-            'hawkeye' => 'medalWeaponHandCannon',
-            'lethalcadence' => 'medalWeaponPulse',
-            'splashdamage' => 'medalWeaponRocket',
-            'fieldscout' => 'medalWeaponScout',
-            'closeencounters' => 'medalWeaponShotgun',
-            'submachinist' => 'medalWeaponSmg',
-            'regent' => 'medalWeaponSword',
-            'neverindoubt' => 'medalMatchNeverTrailed',
-            'fromthejawsofdefeat' => 'medalMatchComeback',
-            'fallingstar' => 'medalAbilityDawnbladeSlam',
-            'defyinggravity' => 'medalAbilityDawnbladeAerial',
-            'singularity' => 'medalAbilityVoidwalkerVortex',
-            'fromdowntown' => 'medalAbilityVoidwalkerDistance',
-            'thunderstruck' => 'medalAbilityStormcallerLandfall',
-            'lightningstrike' => 'medalAbilityFlowwalkerQuick',
-            'entangled' => 'medalAbilityNightstalkerTetherQuick',
-            'longbow' => 'medalAbilityNightstalkerLongRange',
-            'perfectguard' => 'medalAbilitySentinelWard',
-            'flyingfortress' => 'medalAbilitySentinelCombo',
-            'absoluteforce' => 'medalAbilityJuggernautSlam',
-            'strikerspecial' => 'medalAbilityJuggernautCombo',
-            'pitchperfect' => 'medalAbilitySunbreakerLongRange',
-            'everythinglookslikeanail' => 'medalAbilitySunbreakerMulti',
-            'counterattack' => 'medalCountdownDefense',
-            'pyrotechnics' => 'medalCountdownDetonated',
-            'bombswhatbombs' => 'medalCountdownDefusedMulti',
-            'laststand' => 'medalCountdownDefusedLastStand',
-            'perfectgame' => 'medalCountdownPerfect',
-            'lonegun' => 'medalSurvivalWinLastStand',
-            'minutetowinit' => 'medalSurvivalQuickWipe',
-            'undertaker' => 'medalSurvivalKnockout',
-            'accordingtoplan' => 'medalSurvivalComeback',
-            'untouchable' => 'medalSurvivalTeamUndefeated',
-            'reclaimer' => 'medalControlPerimeterKill',
-            'dominantadvantage' => 'medalControlAdvantageStreak',
-            'poweroverwhelming' => 'medalControlPowerPlayWipe',
-            'firstsecure' => 'medalSupremacyFirstCrest',
-            'steadfastally' => 'medalSupremacyRecoverStreak',
-            'crestfallen' => 'medalSupremacyCrestCreditStreak',
-            'acrownofcrests' => 'medalSupremacyPerfectSecureRate',
-            'lightemup' => 'medalMayhemFirstSuper',
-            'fireinthehole' => 'medalMayhemGrenadeStreak',
-            'punchandpie' => 'medalMayhemMeleeStreak',
-            'superstar' => 'medalMayhemCastStreak',
-            'byourpowerscombined' => 'medalMayhemCastMulti',
-            'totalmayhem' => 'medalMayhemKillStreak',
-            'polyarmory' => 'medalCrimsonWeaponCombo',
-            'thirdwheel' => 'medalCrimsonRevengeMulti',
-            'brokenup' => 'medalCrimsonApartMulti',
-            'heartbreaker' => 'medalCrimsonSuddenDeath',
-            'bestinclass' => 'medalRumbleDefeatAllClasses',
-            'assassin' => 'medalRumbleUnassistedStreak',
-            'pickpocket' => 'medalRumbleStealStreak',
-            'podiumfinish' => 'medalRumbleTop3',
-            'roundrobin' => 'medalRumbleDefeatAllPlayers',
-            'thesumofalltears' => 'medalRumbleBetterThanAllCombined',
-            'slayer' => 'medalSlayer',
-            'reaper' => 'medalStreak6x',
-            'seventhcolumn' => 'medalStreak7x',
-            'localmaxima' => 'medalShowdownMostKills',
-            'denialofservice' => 'medalShowdownAmmoStreak',
-            'clawingback' => 'medalShowdownRetakeLead',
-            'whenthedustclears' => 'medalShowdownFullTeamSurvival',
-            'werenotdoneyet' => 'medalShowdownForceFinalRound',
-            'invincible' => 'medalShowdownUndefeated',
-            'totalmedals' => 'allMedalsEarned',
-            /* Gambit only medals */
-            'armyofone' => 'medals_pvecomp_medal_invader_kill_four',
-            'massacre' => 'medals_pvecomp_medal_massacre',
-            'noescape' => 'medals_pvecomp_medal_no_escape',
-            'blockbuster' => 'medals_pvecomp_medal_blockbuster',
-            'motehavebeen' => 'medals_pvecomp_medal_tags_denied_15',
-            // '' => 'medals_pvecomp_medal_bank_kill',
-            'denied' => 'medals_pvecomp_medal_denied',
-            'gbnotonmywatch' => 'medals_pvecomp_medal_invasion_shutdown',
-            'locksmith' => 'medals_pvecomp_medal_locksmith',
-            'blockparty' => 'medals_pvecomp_medal_block_party',
-            'neversaydie' => 'medals_pvecomp_medal_never_say_die',
-            'halfbanked' => 'medals_pvecomp_medal_half_banked',
-            'takingturns' => 'medals_pvecomp_medal_everyone_invaded',
-            'killmonger' => 'medals_pvecomp_medal_killmonger',
-            'thrillmonger' => 'medals_pvecomp_medal_thrillmonger',
-            'overkillmonger' => 'medals_pvecomp_medal_overkillmonger',
-            'valuehunter' => 'medals_pvecomp_medal_value_hunter',
-            'firsttoblock' => 'medals_pvecomp_medal_first_to_block',
-            'fastfill' => 'medals_pvecomp_medal_fast_fill',
-            'biggamehunter' => 'medals_pvecomp_medal_big_game_hunter',
-            // '' => 'medals_pvecomp_medal_kill_after_invasion',
-            'payback' => 'medals_pvecomp_medal_revenge',
-            'rapidpayback' => 'medals_pvecomp_medal_revenge_same_invasion',
-            'titansmash' => 'medals_pvecomp_medal_fist_of_havoc_multikill',
-            'atitancanfly' => 'medals_pvecomp_medal_meteor_strike_multikill',
-            'wardofdawn' => 'medals_pvecomp_medal_ward_of_dawn_blocking',
-            'captainofthevoid' => 'medals_pvecomp_medal_void_shield_multikill',
-            'atimeforhammers' => 'medals_pvecomp_medal_thermal_hammer_multikill',
-            'burningpath' => 'medals_pvecomp_medal_thermal_maul_multikill',
-            'lightningrod' => 'medals_pvecomp_medal_arc_staff_multikill',
-            'fireslinger' => 'medals_pvecomp_medal_golden_gun_multikill',
-            'fanofknives' => 'medals_pvecomp_medal_thermal_knives_multikill',
-            'spectralsurgeon' => 'medals_pvecomp_medal_void_blade_multikill',
-            'ensnarement' => 'medals_pvecomp_medal_void_bow_multikill',
-            'ridelightning' => 'medals_pvecomp_medal_arc_lightning_multikill',
-            'chaosincarnate' => 'medals_pvecomp_medal_arc_beam_multikill',
-            'voidbaseddemolition' => 'medals_pvecomp_medal_nova_bomb_multikill',
-            'voidunleashed' => 'medals_pvecomp_medal_nova_pulse_multikill',
-            'rainoffire' => 'medals_pvecomp_medal_thermal_sword_multikill',
-            'dugin' => 'Medals_pvecomp_medal_thermal_sword_healing_multikill',
-        ];
-
-        $aPlaylists = [
-            'story' => 2,
-            'strike' => 3,
-            'raid' => 4,
-            'pvp' => 5,
-            'patrol' => 6,
-            'pve' => 7,
-            'control' => 10,
-            'clash' => 12,
-            'nightfall' => 16,
-            'ib' => 19,
-            'supremacy' => 31,
-            'survival' => 37,
-            'countdown' => 38,
-            'trials' => 84,
-            'social' => 40,
-            'rumble' => 48,
-            'doubles' => 50,
-            'gambit' => 63,
-            'gambitprime' => 75,
-            'gbp' => 75,
-        ];
+        $aStatActions = CommandCatalog::statActions();
+        $aStatMedals = CommandCatalog::statMedals();
+        $aPlaylists = CommandCatalog::playlists();
 
         $iModes = 5; // default PvP.
         $bPGA = false; // default false.
         $bSeperate = false; // default false.
 
-        $aGambitStats = [
-            'invasions',
-            'invasionkills',
-            'invaderkills',
-            'invaderdeaths',
-            'primevalkills',
-            'blockerkills',
-            'mobkills',
-            'highvaluekills',
-            'motespickedup',
-            'motesdeposited',
-            'motesdenied',
-            'motesdegraded',
-            'moteslost',
-            'bankoverage',
-            'smallblockers',
-            'mediumblockers',
-            'largeblockers',
-            'primevaldamage',
-            'primevalhealing',
-            'gbroundsplayed',
-            'gbroundswon',
+        $aGambitStats = CommandCatalog::gambitStats();
 
-            'armyofone',
-            'massacre',
-            'noescape',
-            'blockbuster',
-            'motehavebeen',
-            'denied',
-            'gbnotonmywatch',
-            'locksmith',
-            'blockparty',
-            'neversaydie',
-            'halfbanked',
-            'takingturns',
-            'killmonger',
-            'thrillmonger',
-            'overkillmonger',
-            'valuehunter',
-            'firsttoblock',
-            'fastfill',
-            'biggamehunter',
-            'payback',
-            'rapidpayback',
-            'titansmash',
-            'atitancanfly',
-            'wardofdawn',
-            'captainofthevoid',
-            'atimeforhammers',
-            'burningpath',
-            'lightningrod',
-            'fireslinger',
-            'fanofknives',
-            'spectralsurgeon',
-            'ensnarement',
-            'ridelightning',
-            'chaosincarnate',
-            'voidbaseddemolition',
-            'voidunleashed',
-            'rainoffire',
-            'dugin',
-        ];
-
-        if (in_array($strAction, $aGambitStats) || in_array(substr($strAction, 1), $aGambitStats)) {
+        if (in_array($strAction, $aGambitStats, true) || in_array(substr($strAction, 1), $aGambitStats, true)) {
             $iModes = 63; // These stats only will work for Gambit
         } else {
             foreach ($aPlaylists as $strPlaylist => $iPlaylistModes) {
@@ -511,7 +236,7 @@ class Action
                     $iModes = $iPlaylistModes;
                     $strAction = str_replace($strPlaylist, '', $strAction);
 
-                    if ($strAction == '' || $strAction == 'c') {
+                    if ($strAction === '' || $strAction === 'c') {
                         $c = true;
                         $xField = ['killsDeathsRatio', 'winLossRatio', 'activitiesWon'];
                         $strTitle = 'summary';
@@ -521,12 +246,12 @@ class Action
             }
         }
 
-        if (isset($strAction[0]) && $strAction[0] == 'c' && strlen($strAction) > 2) {
+        if (isset($strAction[0]) && $strAction[0] === 'c' && strlen($strAction) > 2) {
             $bSeperate = true;
             $strAction = substr($strAction, 1);
         }
 
-        if (strlen($strAction) > 3 && substr($strAction, -3) == 'pga') {
+        if (strlen($strAction) > 3 && substr($strAction, -3) === 'pga') {
             $bPGA = true;
             $strAction = substr($strAction, 0, -3);
         }
@@ -534,7 +259,7 @@ class Action
         // check alias again, since we removed the pga and c part
         $strAction = $this->getAlias($strAction);
         $bMedal = false;
-        if ($strAction != '' && (isset($aStatActions[$strAction]) || isset($aStatMedals[$strAction]))) {
+        if ($strAction !== '' && (isset($aStatActions[$strAction]) || isset($aStatMedals[$strAction]))) {
             if (isset($aStatActions[$strAction])) {
                 $xStat = $aStatActions[$strAction];
             } else {
@@ -557,8 +282,8 @@ class Action
             return [
                 'key' => $strTitle,
                 'title' => '',
-                'provider' => 'BungieProvider',
-                'endpoint' => 'stats',
+                'provider' => CommandProvider::BUNGIE->value,
+                'endpoint' => CommandEndpoint::STATS->value,
                 'filter' => 'getStats',
                 'options' => (object) [
                     'field' => $xField,
@@ -569,29 +294,23 @@ class Action
                 ],
             ];
         }
+
+        return false;
     }
 
-    private function isTextCommand($strAction)
+    /**
+     * Resolve plain-text commands.
+     */
+    private function isTextCommand(string $strAction): array|false
     {
-        $a = [
-            'default_info' => 'Usage !destiny <action> <user> <platform>, Command list: destinycommand.com for help @DestinyCommand on Twitter. Have you tried "!destiny setaccount" yet: https://twitter.com/DestinyCommand/status/1164196373933318144 ',
-            'help' => 'Usage !destiny <action> <user> <platform>, Command list: destinycommand.com for help @DestinyCommand on Twitter',
-            'commands' => 'Command list: destinycommand.com',
-            'setplayer' => 'x',
-            'setaccount' => 'x',
-            'setxur' => 'x',
-            'ratemybutt' => $this->RateMyButt(),
-            'trialsmap' => '\'Trialsmap\' command is in development',
-            'nightfall' => '\'Nightfall\' command is in development',
-            'elo' => '\'ELO\' command is in development',
-            'donate' => 'If you like the !destiny command and want to support: https://2g.be/u/donate (This money does NOT go to the streamer)',
-        ];
+        $a = CommandCatalog::textCommands();
+        $a['ratemybutt'] = $this->rateMyButt();
 
         if (isset($a[$strAction])) {
             return [
                 'key' => $strAction,
                 'text' => $a[$strAction],
-                'provider' => 'plain_text',
+                'provider' => CommandProvider::PLAIN_TEXT->value,
                 'noUser' => true,
             ];
         }
@@ -599,13 +318,16 @@ class Action
         return false;
     }
 
-    private function RateMyButt()
+    /**
+     * Generate the legacy random butt rating text response.
+     */
+    private function rateMyButt(): string
     {
         $x = rand(1, 10);
         $i = 10;
-        if ($x == 5) {
+        if ($x === 5) {
             $a = rand(1, 4);
-            if ($a == 1) {
+            if ($a === 1) {
                 $i = 7;
             } // 5/7 ratings Kappa
         }
@@ -613,25 +335,12 @@ class Action
         return 'butt rated: '.$x.'/'.$i;
     }
 
-    private function getAlias($strAction)
+    /**
+     * Resolve an action alias to its canonical command key.
+     */
+    private function getAlias(string $strAction): string
     {
-        $a = [
-            'tw' => 'trialsweekly',
-            'tt' => 'trialsteam',
-            'kinetic' => 'primary',
-            'energy' => 'secondary',
-            'power' => 'heavy',
-            'loadout' => 'weapons',
-            'rmb' => 'ratemybutt',
-            'combatrating' => 'cr',
-            'winloss' => 'wl',
-            'mostkills' => 'mk',
-            'nade' => 'grenade',
-            'powerlvl' => 'powerlevel',
-            'light' => 'powerlevel',
-            'pwrlvl' => 'powerlevel',
-            'trialscard' => 'card',
-        ];
+        $a = CommandCatalog::actionAliases();
 
         return isset($a[$strAction]) ? $a[$strAction] : $strAction;
     }

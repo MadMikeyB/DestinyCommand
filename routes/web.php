@@ -1,11 +1,18 @@
 <?php
 
+use App\Http\Controllers\Auth\BungieController;
+use App\Http\Controllers\Auth\NightbotController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BungieNameConverterController;
 use App\Http\Controllers\CommandController;
-use App\OAuth\OAuthHandler;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/auth/bungie/redirect', [BungieController::class, 'redirectToBungie']);
+Route::get('/auth/bungie/callback', [BungieController::class, 'handleBungieCallback']);
+Route::get('/auth/nightbot/redirect', [NightbotController::class, 'redirectToNightbot']);
+Route::get('/auth/nightbot/callback', [NightbotController::class, 'handleNightbotCallback']);
+Route::get('/auth/Bungie', [BungieController::class, 'legacyBungieAuth']);
+Route::get('/auth/Nightbot', [NightbotController::class, 'legacyNightbotAuth']);
 Route::get('/auth/{service}', [AuthController::class, 'authHandler']);
 Route::get('/api/command', [CommandController::class, 'parseRequest']);
 Route::match(['get', 'post'], '/tools/bungienameconverter', [BungieNameConverterController::class, 'convert']);
@@ -19,21 +26,8 @@ Route::prefix('dashboard')->middleware('CheckOAuth:Bungie')->group(function (): 
     });
 });
 
-Route::get('/dashboard/login', function () {
-    $oauthHandler = new OAuthHandler('Bungie');
-
-    return view('dashboard.login', [
-        'auth_url' => $oauthHandler->getAuthUrl(),
-    ]);
-});
-
-Route::get('/dashboard/settings/nightbot/login', function () {
-    $oauthHandler = new OAuthHandler('Nightbot');
-
-    return view('dashboard.nightbot.login', [
-        'auth_url' => $oauthHandler->getAuthUrl(),
-    ]);
-});
+Route::get('/dashboard/login', [BungieController::class, 'redirectToBungie']);
+Route::get('/dashboard/settings/nightbot/login', [NightbotController::class, 'redirectToNightbot']);
 
 Route::get('/', function () {
     return view('welcome');

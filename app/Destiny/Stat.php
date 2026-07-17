@@ -2,17 +2,25 @@
 
 namespace App\Destiny;
 
+/**
+ * Represents a formatted stat value from Bungie historical stats.
+ */
 class Stat
 {
-    public $key;
+    public string $key;
 
-    public $value;
+    public int|float $value;
 
-    public $displayValue;
+    public mixed $displayValue;
 
-    public $title;
+    public string $title;
 
-    public function __construct($oStat, $strPlaylist)
+    public string $playlist;
+
+    /**
+     * Build a stat value from a raw Bungie stat payload.
+     */
+    public function __construct(object $oStat, string $strPlaylist)
     {
         $this->key = $oStat->statId;
         $this->value = $oStat->basic->value;
@@ -21,7 +29,10 @@ class Stat
         $this->playlist = $strPlaylist;
     }
 
-    public function getTitle($strKey)
+    /**
+     * Resolve a display title for a stat identifier.
+     */
+    public function getTitle(string $strKey): string
     {
         $aTitles = [
             /* Stats */

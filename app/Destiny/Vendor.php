@@ -2,13 +2,19 @@
 
 namespace App\Destiny;
 
+/**
+ * Wraps a public vendor payload and exposes sale item groupings.
+ */
 class Vendor
 {
     public $refreshDate;
 
-    private $saleItems;
+    private array $saleItems = [];
 
-    public function __construct($iHash, $oData)
+    /**
+     * Build a vendor wrapper from the public vendors payload.
+     */
+    public function __construct(int|string $iHash, mixed $oData)
     {
         if ($oData) {
             if (isset($oData->vendors->data->{$iHash}->nextRefreshDate)) {
@@ -21,7 +27,10 @@ class Vendor
         }
     }
 
-    public function getSales($strFilter = false)
+    /**
+     * Get grouped sale items, optionally filtered to a single group.
+     */
+    public function getSales(string|false $strFilter = false): array
     {
         $aWeapons = [];
         $aHelmets = [];
@@ -34,7 +43,7 @@ class Vendor
             $oItem = new EquipmentItem($oSaleItem);
             $oItem->load($oSaleItem, [], false);
 
-            if ($oItem && isset($oItem->tierTypeHash) && $oItem->tierTypeHash == 2759499571) { // Exotics only
+            if ($oItem && isset($oItem->tierTypeHash) && $oItem->tierTypeHash === 2759499571) { // Exotics only
                 switch ($oItem->bucketTypeHash) {
                     // Consumables
                     case 1469714392:

@@ -24,7 +24,7 @@
 
 <p><code>!destiny &lt;action&gt; &lt;user&gt; &lt;platform&gt;</code></p>
 
-<p>Example: <code>!destiny primary xgerhard xbox</code></p>
+<p>Example: <code>!destiny primary xgerhard#1234 xbox</code></p>
 
 <h3>Loadout:</h3>
 
@@ -52,17 +52,17 @@
 
 <p>For example:</p>
 
-<p><code>!destiny kd xgerhard</code> - Will show account overall kd.</p>
+<p><code>!destiny kd xgerhard#1234</code> - Will show account overall kd.</p>
 
-<p><code>!destiny ckd xgerhard</code> - Will show kd per character.</p>
+<p><code>!destiny ckd xgerhard#1234</code> - Will show kd per character.</p>
 
 <p>By default the stat command will grab pvp stats, if you want to specify a specific playlist add the playlist in front of the command.</p>
 
 <p>For example:</p>
 
-<p><code>!destiny pvekd xgerhard</code> - Will show account overall kd in PvE.</p>
+<p><code>!destiny pvekd xgerhard#1234</code> - Will show account overall kd in PvE.</p>
 
-<p><code>!destiny cpvekd xgerhard</code> - Will show kd per character in PvE.</p>
+<p><code>!destiny cpvekd xgerhard#1234</code> - Will show kd per character in PvE.</p>
 
 <p>The following stats can be checked:</p>
 
@@ -218,7 +218,7 @@
 
 <h3>setplayer (account linking)</h3>
 
-<p>Account linking is available for Nightbot users. Tired of typing your gamertag/platform for each command? Use <code>!destiny setplayer username platform</code> to link your Twitch/Youtube/Discord account to your Destiny account. After linking your account you can use all !destiny commands without having to type your username/platform, for example: <code>!destiny primary</code>.</p>
+<p>Account linking is available for Nightbot users. Tired of typing your gamertag/platform for each command? Use <code>!destiny setplayer username#1234 platform</code> to link your Twitch/Youtube/Discord account to your Destiny account. After linking your account you can use all !destiny commands without having to type your username/platform, for example: <code>!destiny primary</code>.</p>
 
 <h2>Install</h2>
 

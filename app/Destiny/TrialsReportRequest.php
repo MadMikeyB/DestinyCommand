@@ -2,19 +2,25 @@
 
 namespace App\Destiny;
 
+/**
+ * Represents a queued Trials Report HTTP request.
+ */
 class TrialsReportRequest
 {
-    public $url;
+    public string $url;
 
-    public $cache;
+    public int $cache;
 
-    public $params;
+    public array $params;
 
-    public $baseUrl = 'https://api.trialsofthenine.com';
+    public string $baseUrl = 'https://api.trialsofthenine.com';
 
-    public $method;
+    public string $method;
 
-    public function __construct($strUrl, $aParams = [], $iCache = 0, $strMethod = 'GET')
+    /**
+     * Build a new Trials Report request definition.
+     */
+    public function __construct(string $strUrl, array $aParams = [], int $iCache = 0, string $strMethod = 'GET')
     {
         $this->url = $this->baseUrl.$strUrl;
         $this->cache = $iCache;

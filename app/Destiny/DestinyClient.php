@@ -2,22 +2,31 @@
 
 namespace App\Destiny;
 
-use App\RequestHandler;
+use App\Transports\AsyncRequestTransport;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Queues and resolves Bungie API requests used by command execution.
+ */
 class DestinyClient
 {
-    private $r;
+    private AsyncRequestTransport $r;
 
-    private $res = [];
+    private array $res = [];
 
+    /**
+     * Create a new Destiny client instance.
+     */
     public function __construct()
     {
-        $this->r = new RequestHandler;
+        $this->r = new AsyncRequestTransport;
     }
 
-    public function searchDestinyPlayerByBungieName($strDisplayName, $iDisplayNameCode)
+    /**
+     * Queue a Bungie-name based player search request.
+     */
+    public function searchDestinyPlayerByBungieName(string $strDisplayName, int|string $iDisplayNameCode): void
     {
         $this->r->addRequest(
             new DestinyRequest('/Platform/Destiny2/SearchDestinyPlayerByBungieName/all/', [], 3400, 'POST', [
@@ -29,7 +38,10 @@ class DestinyClient
         );
     }
 
-    public function searchDestinyPlayer($strGamertag)
+    /**
+     * Queue a legacy Destiny player search request.
+     */
+    public function searchDestinyPlayer(string $strGamertag): void
     {
         $this->r->addRequest(
             new DestinyRequest('/Platform/Destiny2/SearchDestinyPlayer/-1/'.rawurlencode($strGamertag).'/', [], 3400),
@@ -38,7 +50,10 @@ class DestinyClient
         );
     }
 
-    public function searchUsers($strUser)
+    /**
+     * Queue a Bungie user search request.
+     */
+    public function searchUsers(string $strUser): void
     {
         $this->r->addRequest(
             new DestinyRequest('/Platform/User/SearchUsers/', ['q' => $strUser], 0),
@@ -47,7 +62,10 @@ class DestinyClient
         );
     }
 
-    public function getProfile($iMembershipType, $iMembershipId, $aComponents = [])
+    /**
+     * Queue a profile request.
+     */
+    public function getProfile(int|string $iMembershipType, int|string $iMembershipId, array $aComponents = []): void
     {
         $this->r->addRequest(
             new DestinyRequest('/Platform/Destiny2/'.$iMembershipType.'/Profile/'.$iMembershipId.'/', ['components' => implode(',', $aComponents)], 0),
@@ -56,7 +74,10 @@ class DestinyClient
         );
     }
 
-    public function getLinkedProfiles($iMembershipType, $iMembershipId)
+    /**
+     * Queue a linked profiles request.
+     */
+    public function getLinkedProfiles(int|string $iMembershipType, int|string $iMembershipId): void
     {
         $this->r->addRequest(
             new DestinyRequest('/Platform/Destiny2/'.$iMembershipType.'/Profile/'.$iMembershipId.'/LinkedProfiles/', [], 0),
@@ -65,7 +86,10 @@ class DestinyClient
         );
     }
 
-    public function getDestinyManifest($strDatabase = false)
+    /**
+     * Queue a Destiny manifest request.
+     */
+    public function getDestinyManifest(string|false $strDatabase = false): void
     {
         $this->r->addRequest(
             new DestinyRequest($strDatabase === false ? '/Platform/Destiny2/Manifest/' : $strDatabase),
@@ -74,7 +98,10 @@ class DestinyClient
         );
     }
 
-    public function getHistoricalStats($iMembershipType, $iMembershipId, $iCharacterId, $aParams = [])
+    /**
+     * Queue a historical stats request.
+     */
+    public function getHistoricalStats(int|string $iMembershipType, int|string $iMembershipId, int|string $iCharacterId, array $aParams = []): void
     {
         $this->r->addRequest(
             new DestinyRequest('/Platform/Destiny2/'.$iMembershipType.'/Account/'.$iMembershipId.'/Character/'.$iCharacterId.'/Stats/', $aParams),
@@ -83,7 +110,10 @@ class DestinyClient
         );
     }
 
-    public function getPublicVendors($aComponents = [])
+    /**
+     * Queue a public vendors request.
+     */
+    public function getPublicVendors(array $aComponents = []): void
     {
         $this->r->addRequest(
             new DestinyRequest('/Platform/Destiny2/Vendors/', ['components' => implode(',', $aComponents)], 0),
@@ -92,12 +122,15 @@ class DestinyClient
         );
     }
 
-    public function get($strCategory)
+    /**
+     * Execute and return responses for a queued request category.
+     */
+    public function get(string $strCategory): array
     {
         if (! isset($this->res[$strCategory])) {
-            $aResponses = $this->r->requester($strCategory);
+            $aResponses = $this->r->execute($strCategory);
             foreach ($aResponses as $strKey => $oResponse) {
-                if (isset($oResponse->ErrorCode) && $oResponse->ErrorCode != 1) {
+                if (isset($oResponse->ErrorCode) && $oResponse->ErrorCode !== 1) {
                     throw new Exception($oResponse->Message);
                 } else {
                     $this->res[$strCategory][$strKey] = $oResponse->Response;

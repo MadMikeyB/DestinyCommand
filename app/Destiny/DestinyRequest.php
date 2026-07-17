@@ -2,21 +2,27 @@
 
 namespace App\Destiny;
 
+/**
+ * Represents a queued Bungie API HTTP request.
+ */
 class DestinyRequest
 {
-    public $url;
+    public string $url;
 
-    public $cache;
+    public int $cache;
 
-    public $params;
+    public array $params;
 
-    public $baseUrl = 'https://www.bungie.net';
+    public string $baseUrl = 'https://www.bungie.net';
 
-    public $method;
+    public string $method;
 
-    public $postFields;
+    public array $postFields = [];
 
-    public function __construct($strUrl, $aParams = [], $iCache = 0, $strMethod = 'GET', $aPostFields = [])
+    /**
+     * Build a new Bungie API request definition.
+     */
+    public function __construct(string $strUrl, array $aParams = [], int $iCache = 0, string $strMethod = 'GET', array $aPostFields = [])
     {
         $this->url = $this->baseUrl.$strUrl;
         $this->cache = $iCache;

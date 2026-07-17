@@ -2,14 +2,23 @@
 
 namespace App\Destiny;
 
+/**
+ * Represents a formatted Destiny inventory or vendor item.
+ */
 class EquipmentItem
 {
+    /**
+     * Build an equipment item shell from a raw item payload.
+     */
     public function __construct($oEquipmentItem)
     {
         $this->itemInstanceId = $oEquipmentItem->itemInstanceId ?? 0;
         $this->itemHash = $oEquipmentItem->itemHash;
     }
 
+    /**
+     * Hydrate manifest-backed item details and optional perks.
+     */
     public function load($oItemInstance, $aSockets, $bPerks)
     {
         $oManifest = new Manifest;

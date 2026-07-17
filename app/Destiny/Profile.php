@@ -4,16 +4,25 @@ namespace App\Destiny;
 
 use App\Destiny\Filters\InventoryFilter;
 
+/**
+ * Wraps a Bungie profile payload and exposes command-specific projections.
+ */
 class Profile
 {
-    public function __construct($aProperties = [])
+    /**
+     * Build a new profile wrapper.
+     */
+    public function __construct(array|object $aProperties = [])
     {
         foreach ($aProperties as $strProperty => $oProperty) {
             $this->$strProperty = $oProperty;
         }
     }
 
-    public function getCharacterProfileValue($oOptions)
+    /**
+     * Extract a character profile field for each returned character.
+     */
+    public function getCharacterProfileValue(object $oOptions): array
     {
         $aRes = [];
         if (isset($oOptions->field)) {
@@ -25,7 +34,10 @@ class Profile
         return $aRes;
     }
 
-    public function getCharacterProgression($oOptions)
+    /**
+     * Extract character progression data for each returned character.
+     */
+    public function getCharacterProgression(object $oOptions): array
     {
         $aRes = [];
         $iLatest = false;
@@ -34,7 +46,7 @@ class Profile
         }
 
         foreach ($this->characters->data as $iCharacterId => $oCharacter) {
-            if ($iLatest && $iLatest != $iCharacterId) {
+            if ($iLatest && $iLatest !== $iCharacterId) {
                 continue;
             }
 
@@ -49,7 +61,10 @@ class Profile
         return $aRes;
     }
 
-    public function getCharacterEquipment($oOptions)
+    /**
+     * Extract equipment data for the selected characters.
+     */
+    public function getCharacterEquipment(object $oOptions): array
     {
         $aRes = [];
         $bPerks = $oOptions->perks ?? false;
@@ -59,7 +74,7 @@ class Profile
         }
 
         foreach ($this->characters->data as $iCharacterId => $oCharacter) {
-            if ($iLatest && $iLatest != $iCharacterId) {
+            if ($iLatest && $iLatest !== $iCharacterId) {
                 continue;
             }
 
@@ -74,7 +89,10 @@ class Profile
         return $aRes;
     }
 
-    public function getLatestCharacterId()
+    /**
+     * Get the most recently played character id.
+     */
+    public function getLatestCharacterId(): int|string|false
     {
         $dLastPlayed = false;
         $iLatestCharacterId = false;

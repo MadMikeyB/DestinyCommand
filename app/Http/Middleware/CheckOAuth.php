@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
-use App\OAuth\OAuthHandler;
+use App\Models\OAuth\OAuthProvider;
+use App\Services\BungieService;
+use App\Services\NightbotService;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -17,13 +19,30 @@ class CheckOAuth
      */
     public function handle($request, Closure $next, $strService)
     {
-        $OAuthHandler = new OAuthHandler($strService);
-        if ($request->session()->has($strService.'-auth')) {
-            if ($OAuthHandler->isAuthValid($request->session()->get($strService.'-auth'))) {
+        if ($strService === 'Bungie') {
+            OAuthProvider::firstOrCreate([
+                'name' => 'Bungie',
+            ]);
+
+            if ($request->session()->has('Bungie-auth') && (new BungieService)->isAuthValid($request->session()->get('Bungie-auth'))) {
                 return $next($request);
             }
+
+            return redirect('/auth/bungie/redirect');
         }
 
-        return redirect($OAuthHandler->provider->local_redirect.'/login');
+        if ($strService === 'Nightbot') {
+            OAuthProvider::firstOrCreate([
+                'name' => 'Nightbot',
+            ]);
+
+            if ($request->session()->has('Nightbot-auth') && (new NightbotService)->isAuthValid($request->session()->get('Nightbot-auth'))) {
+                return $next($request);
+            }
+
+            return redirect('/auth/nightbot/redirect');
+        }
+
+        abort(404);
     }
 }

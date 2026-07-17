@@ -2,28 +2,38 @@
 
 namespace App\Destiny;
 
+use App\Enums\CharacterProgressionField;
+
+/**
+ * Represents a formatted per-character progression value.
+ */
 class CharacterProgressionValue
 {
-    public $displayValue;
+    public mixed $displayValue;
 
-    public $title;
+    public string $title;
 
-    public $classHash;
+    public int|string $classHash;
 
-    public function __construct($strKey, $xValue, $strClassHash)
+    /**
+     * Build a character progression value from a raw Bungie field.
+     */
+    public function __construct(int|string $strKey, mixed $xValue, int|string $strClassHash)
     {
         $this->displayValue = $xValue;
         $this->title = $this->getTitle($strKey);
         $this->classHash = $strClassHash;
     }
 
-    private function getTitle($strKey)
+    /**
+     * Resolve a display title for the given progression field.
+     */
+    private function getTitle(int|string $strKey): string
     {
-        $aTitles = [
-            1062449239 => 'Current Trials card: Wins',
-            2093709363 => 'Flawless',
-        ];
+        if (! is_int($strKey)) {
+            return '';
+        }
 
-        return $aTitles[$strKey] ?? '';
+        return CharacterProgressionField::tryFrom($strKey)?->title() ?? '';
     }
 }

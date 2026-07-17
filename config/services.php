@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'bungie' => [
+        'api_key' => env('BUNGIE_API_KEY'),
+        'client_id' => env('BUNGIE_CLIENT_ID'),
+        'client_secret' => env('BUNGIE_CLIENT_SECRET'),
+        'redirect' => env('BUNGIE_REDIRECT_URI'),
+        'app_id' => env('BUNGIE_APP_ID'),
+        'app_version' => env('APP_VERSION', 'local'),
+    ],
+
 ];
