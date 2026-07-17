@@ -4,23 +4,23 @@
 @section('meta_description', 'DestinyCommand provides Destiny 2 command syntax, bot installation snippets, and player stat lookups for supported stream and community bots.')
 
 @section('content')
-    <div class="space-y-4">
+    <div class="space-y-4 text-[15px]">
         <section class="space-y-3">
-            <details class="overflow-hidden rounded border border-slate-300 bg-white" open>
-                <summary class="cursor-pointer list-none border-b border-slate-200 px-4 py-4 text-lg text-slate-900 marker:hidden">What is DestinyCommand.com?</summary>
-                <div class="prose prose-slate max-w-none px-4 py-4 prose-code:text-slate-900">
+            <details class="overflow-hidden rounded-lg border border-stone-300 bg-stone-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900" open>
+                <summary class="cursor-pointer list-none border-b border-stone-200 px-4 py-3 text-base font-medium text-zinc-800 marker:hidden dark:border-zinc-800 dark:text-zinc-100">What is DestinyCommand.com?</summary>
+                <div class="docs-prose prose prose-sm prose-slate max-w-none px-4 py-4 prose-a:text-zinc-800 prose-a:decoration-stone-400 prose-a:underline-offset-2 prosezinc-900t-zinc-900 prose-headings:text-zinc-800 prose-table:text-sm dark:prose-invert dark:prose-a:text-zinc-100 dark:prose-a:decoration-zinc-600 dark:prose-code:text-zinc-100 dark:prose-headings:text-zinc-100">
                     <p>The Destiny Command is an app/command you can add to your chat bot that allows you and your viewers to check their stats across Destiny 2 as a whole. Whether it be Trials stats, K/D, loadout or just checking the amount of times you've achieved a certain medal.</p>
                     <p>We support all platforms, but mainly focus on Twitch. There are bots supporting the command on Twitch, Youtube, Discord, Slack and Mixer.</p>
                     <p>Installation is simple, choose your bot below and follow the instructions. For most bots a simple copy-paste in your chat is enough!</p>
                 </div>
             </details>
 
-            <details class="overflow-hidden rounded border border-slate-300 bg-white">
-                <summary class="cursor-pointer list-none border-b border-slate-200 px-4 py-4 text-lg text-slate-900 marker:hidden">Command List</summary>
-                <div id="commands" class="prose prose-slate max-w-none px-4 py-4 prose-code:text-slate-900">
+            <details class="overflow-hidden rounded-lg border border-stone-300 bg-stone-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <summary class="cursor-pointer list-none border-b border-stone-200 px-4 py-3 text-base font-medium text-zinc-800 marker:hidden dark:border-zinc-800 dark:text-zinc-100">Command List</summary>
+                <div id="commands" class="docs-prose prose prose-sm prose-slate max-w-none px-4 py-4 prose-a:text-zinc-800 prose-a:decoration-stone-400 prose-a:underline-offset-2 prosezinc-900t-zinc-900 prose-headings:text-zinc-800 prose-table:text-sm dark:prose-invert dark:prose-a:text-zinc-100 dark:prose-a:decoration-zinc-600 dark:prose-code:text-zinc-100 dark:prose-headings:text-zinc-100">
                     <h3>Usage:</h3>
                     <p><code>!destiny &lt;action&gt; &lt;user&gt; &lt;platform&gt;</code></p>
-                    <p>Example: <code>!destiny primary xgerhard#1234 xbox</code></p>
+                    <p>Example: <code>!destiny primary a_dmg04#7777 xbox</code></p>
 
                     <h3>Loadout:</h3>
                     <ul>
@@ -44,12 +44,12 @@
                     <h3>Stats:</h3>
                     <p>Basic info: By default the stat command will show an account overall stat, if you want character specific stats add a <code>c</code> in front of the stat.</p>
                     <p>For example:</p>
-                    <p><code>!destiny kd xgerhard#1234</code> - Will show account overall kd.</p>
-                    <p><code>!destiny ckd xgerhard#1234</code> - Will show kd per character.</p>
+                    <p><code>!destiny kd a_dmg04#7777</code> - Will show account overall kd.</p>
+                    <p><code>!destiny ckd a_dmg04#7777</code> - Will show kd per character.</p>
                     <p>By default the stat command will grab pvp stats, if you want to specify a specific playlist add the playlist in front of the command.</p>
                     <p>For example:</p>
-                    <p><code>!destiny pvekd xgerhard#1234</code> - Will show account overall kd in PvE.</p>
-                    <p><code>!destiny cpvekd xgerhard#1234</code> - Will show kd per character in PvE.</p>
+                    <p><code>!destiny pvekd a_dmg04#7777</code> - Will show account overall kd in PvE.</p>
+                    <p><code>!destiny cpvekd a_dmg04#7777</code> - Will show kd per character in PvE.</p>
                     <p>The following stats can be checked:</p>
 
                     <ul>
@@ -204,52 +204,52 @@
                 </div>
             </details>
 
-            <details class="overflow-hidden rounded border border-slate-300 bg-white">
-                <summary class="cursor-pointer list-none border-b border-slate-200 px-4 py-4 text-lg text-slate-900 marker:hidden">Account linking</summary>
-                <div class="prose prose-slate max-w-none px-4 py-4 prose-code:text-slate-900">
+            <details class="overflow-hidden rounded-lg border border-stone-300 bg-stone-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <summary class="cursor-pointer list-none border-b border-stone-200 px-4 py-3 text-base font-medium text-zinc-800 marker:hidden dark:border-zinc-800 dark:text-zinc-100">Account linking</summary>
+                <div class="docs-prose prose prose-sm prose-slate max-w-none px-4 py-4 prose-a:text-zinc-800 prose-a:decoration-stone-400 prose-a:underline-offset-2 prosezinc-900t-zinc-900 prose-headings:text-zinc-800 prose-table:text-sm dark:prose-invert dark:prose-a:text-zinc-100 dark:prose-a:decoration-zinc-600 dark:prose-code:text-zinc-100 dark:prose-headings:text-zinc-100">
                     <p>Account linking is available for Nightbot users. Tired of typing your gamertag/platform for each command? Use <code>!destiny setplayer username#1234 platform</code> to link your Twitch/Youtube/Discord account to your Destiny account. After linking your account you can use all !destiny commands without having to type your username/platform, for example: <code>!destiny primary</code>.</p>
                 </div>
             </details>
         </section>
 
         <section class="space-y-3">
-            <h2 class="px-4 text-3xl font-normal text-slate-900">Install</h2>
+            <h2 class="px-4 text-3xl font-normal text-zinc-800 dark:text-zinc-100">Install</h2>
 
-            <details class="overflow-hidden rounded border border-slate-300 bg-white">
-                <summary class="cursor-pointer list-none border-b border-slate-200 px-4 py-4 text-lg text-slate-900 marker:hidden">Nightbot (Twitch / Youtube / Discord)</summary>
-                <div id="install" class="prose prose-slate max-w-none px-4 py-4 prose-code:text-slate-900">
+            <details class="overflow-hidden rounded-lg border border-stone-300 bg-stone-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <summary class="cursor-pointer list-none border-b border-stone-200 px-4 py-3 text-base font-medium text-zinc-800 marker:hidden dark:border-zinc-800 dark:text-zinc-100">Nightbot (Twitch / Youtube / Discord)</summary>
+                <div id="install" class="docs-prose prose prose-sm prose-slate max-w-none px-4 py-4 prose-a:text-zinc-800 prose-a:decoration-stone-400 prose-a:underline-offset-2 prosezinc-900t-zinc-900 prose-headings:text-zinc-800 prose-table:text-sm dark:prose-invert dark:prose-a:text-zinc-100 dark:prose-a:decoration-zinc-600 dark:prose-code:text-zinc-100 dark:prose-headings:text-zinc-100">
                     <p><code>!commands add !destiny $(urlfetch https://destinycommand.com/api/command?query=$(querystring)&amp;default_console=xbox)</code></p>
                     <p>Optional: the <b>default_console</b> parameter can be changed to either <b>pc, xbox or ps</b>. This is the main console which will be chosen if no console is provided.</p>
                 </div>
             </details>
 
-            <details class="overflow-hidden rounded border border-slate-300 bg-white">
-                <summary class="cursor-pointer list-none border-b border-slate-200 px-4 py-4 text-lg text-slate-900 marker:hidden">Streamlabs</summary>
-                <div class="prose prose-slate max-w-none px-4 py-4 prose-code:text-slate-900">
+            <details class="overflow-hidden rounded-lg border border-stone-300 bg-stone-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <summary class="cursor-pointer list-none border-b border-stone-200 px-4 py-3 text-base font-medium text-zinc-800 marker:hidden dark:border-zinc-800 dark:text-zinc-100">Streamlabs</summary>
+                <div class="docs-prose prose prose-sm prose-slate max-w-none px-4 py-4 prose-a:text-zinc-800 prose-a:decoration-stone-400 prose-a:underline-offset-2 prosezinc-900t-zinc-900 prose-headings:text-zinc-800 prose-table:text-sm dark:prose-invert dark:prose-a:text-zinc-100 dark:prose-a:decoration-zinc-600 dark:prose-code:text-zinc-100 dark:prose-headings:text-zinc-100">
                     <p><code>!addcommand !destiny {readapi.https://destinycommand.com/api/command?query={1:3}&amp;bot=streamlabs&amp;user={user.name}&amp;channel={channel.name}&amp;default_console=xbox}</code></p>
                     <p>Optional: the <b>default_console</b> parameter can be changed to either <b>pc, xbox or ps</b>. This is the main console which will be chosen if no console is provided.</p>
                 </div>
             </details>
 
-            <details class="overflow-hidden rounded border border-slate-300 bg-white">
-                <summary class="cursor-pointer list-none border-b border-slate-200 px-4 py-4 text-lg text-slate-900 marker:hidden">Streamelements (Twitch / Youtube)</summary>
-                <div class="prose prose-slate max-w-none px-4 py-4 prose-code:text-slate-900">
+            <details class="overflow-hidden rounded-lg border border-stone-300 bg-stone-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <summary class="cursor-pointer list-none border-b border-stone-200 px-4 py-3 text-base font-medium text-zinc-800 marker:hidden dark:border-zinc-800 dark:text-zinc-100">Streamelements (Twitch / Youtube)</summary>
+                <div class="docs-prose prose prose-sm prose-slate max-w-none px-4 py-4 prose-a:text-zinc-800 prose-a:decoration-stone-400 prose-a:underline-offset-2 prosezinc-900t-zinc-900 prose-headings:text-zinc-800 prose-table:text-sm dark:prose-invert dark:prose-a:text-zinc-100 dark:prose-a:decoration-zinc-600 dark:prose-code:text-zinc-100 dark:prose-headings:text-zinc-100">
                     <p><code>!command add !destiny ${customapi.https://destinycommand.com/api/command?query=$(queryencode $(1:))&amp;bot=streamelements&amp;user=$(queryencode ${user})&amp;channel=$(queryencode ${channel})&amp;default_console=xbox}</code></p>
                     <p>Optional: the <b>default_console</b> parameter can be changed to either <b>pc, xbox or ps</b>. This is the main console which will be chosen if no console is provided.</p>
                 </div>
             </details>
 
-            <details class="overflow-hidden rounded border border-slate-300 bg-white">
-                <summary class="cursor-pointer list-none border-b border-slate-200 px-4 py-4 text-lg text-slate-900 marker:hidden">Phantombot (Twitch)</summary>
-                <div class="prose prose-slate max-w-none px-4 py-4 prose-code:text-slate-900">
+            <details class="overflow-hidden rounded-lg border border-stone-300 bg-stone-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <summary class="cursor-pointer list-none border-b border-stone-200 px-4 py-3 text-base font-medium text-zinc-800 marker:hidden dark:border-zinc-800 dark:text-zinc-100">Phantombot (Twitch)</summary>
+                <div class="docs-prose prose prose-sm prose-slate max-w-none px-4 py-4 prose-a:text-zinc-800 prose-a:decoration-stone-400 prose-a:underline-offset-2 prosezinc-900t-zinc-900 prose-headings:text-zinc-800 prose-table:text-sm dark:prose-invert dark:prose-a:text-zinc-100 dark:prose-a:decoration-zinc-600 dark:prose-code:text-zinc-100 dark:prose-headings:text-zinc-100">
                     <p><code>!addcom !destiny (customapi https://destinycommand.com/live/api/command?user=(sender)&amp;channel=(channelname)&amp;bot=phantombot&amp;default_console=xbox&amp;query=(encodeurlparam (echo)))</code></p>
                     <p>Optional: the <b>default_console</b> parameter can be changed to either <b>pc, xbox or ps</b>. This is the main console which will be chosen if no console is provided.</p>
                 </div>
             </details>
 
-            <details class="overflow-hidden rounded border border-slate-300 bg-white">
-                <summary class="cursor-pointer list-none border-b border-slate-200 px-4 py-4 text-lg text-slate-900 marker:hidden">Charlemagne (Discord)</summary>
-                <div class="prose prose-slate max-w-none px-4 py-4 prose-code:text-slate-900">
+            <details class="overflow-hidden rounded-lg border border-stone-300 bg-stone-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <summary class="cursor-pointer list-none border-b border-stone-200 px-4 py-3 text-base font-medium text-zinc-800 marker:hidden dark:border-zinc-800 dark:text-zinc-100">Charlemagne (Discord)</summary>
+                <div class="docs-prose prose prose-sm prose-slate max-w-none px-4 py-4 prose-a:text-zinc-800 prose-a:decoration-stone-400 prose-a:underline-offset-2 prosezinc-900t-zinc-900 prose-headings:text-zinc-800 prose-table:text-sm dark:prose-invert dark:prose-a:text-zinc-100 dark:prose-a:decoration-zinc-600 dark:prose-code:text-zinc-100 dark:prose-headings:text-zinc-100">
                     <p>Charlemagne is a fast Discord bot that provides detailed access to Destiny information. Besides that Charlemagne also responds to all your !destiny commands. More information about Charlemagne at: <a href="https://warmind.io/" target="_blank" rel="noreferrer">warmind.io</a>.</p>
                     <p>To install Charlemagne to your Discord go to <a href="https://warmind.io/" target="_blank" rel="noreferrer">warmind.io</a> and click "add Charlemagne to your server". The following page will pop up:</p>
                     <p><img src="https://2g.be/twitch/destiny/images/dc80127a83287139963e485a97cdc095b.png" alt="Charlemagne install example"></p>

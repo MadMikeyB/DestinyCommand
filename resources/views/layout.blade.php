@@ -16,7 +16,8 @@
     <meta name="description" content="{{ $metaDescription }}">
     <meta name="robots" content="{{ $metaRobots }}">
     <meta name="author" content="DestinyCommand">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f8fafc">
     <link rel="canonical" href="{{ $canonicalUrl }}">
 
     <meta property="og:title" content="{{ $pageTitle }}">
@@ -37,7 +38,7 @@
     @stack('meta')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
+<body class="flex min-h-screen flex-col bg-stone-100 font-sans text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     @include('partials.header')
     @include('partials.body')
     @include('partials.footer')

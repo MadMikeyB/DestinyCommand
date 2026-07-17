@@ -8,3 +8,18 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@layer components {
+    .docs-prose a {
+        color: var(--color-zinc-800);
+        text-decoration-color: var(--color-stone-400);
+        text-underline-offset: 2px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .docs-prose a {
+            color: var(--color-zinc-100);
+            text-decoration-color: var(--color-zinc-600);
+        }
+    }
+}
