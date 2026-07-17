@@ -5,7 +5,7 @@
             <div class="ml-auto flex items-center gap-2 text-sm">
                 <a href="#commands" class="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-zinc-700 transition hover:bg-stone-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">Commands</a>
                 <a href="#install" class="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-zinc-700 transition hover:bg-stone-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">Install</a>
-                <a href="{{ url('/dashboard/login') }}" class="rounded-md border border-zinc-300 bg-zinc-800 px-3 py-1.5 text-white transition hover:bg-zinc-700 dark:border-zinc-600 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">Dashboard</a>
+                {{-- <a href="{{ url('/dashboard/login') }}" class="rounded-md border border-zinc-300 bg-zinc-800 px-3 py-1.5 text-white transition hover:bg-zinc-700 dark:border-zinc-600 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">Dashboard</a> --}}
             </div>
         </nav>
     </div>
