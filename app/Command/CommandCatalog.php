@@ -155,16 +155,16 @@ class CommandCatalog
     public static function textCommands(): array
     {
         return [
-            'default_info' => 'Usage !destiny <action> <user> <platform>, Command list: destinycommand.com for help @DestinyCommand on Twitter. Have you tried "!destiny setaccount" yet: https://twitter.com/DestinyCommand/status/1164196373933318144 ',
-            'help' => 'Usage !destiny <action> <user> <platform>, Command list: destinycommand.com for help @DestinyCommand on Twitter',
-            'commands' => 'Command list: destinycommand.com',
+            'default_info' => 'Usage !destiny <action> <user> <platform>, Command list: https://destinycommand.com',
+            'help' => 'Usage !destiny <action> <user> <platform>, Command list: https://destinycommand.com',
+            'commands' => 'Command list: https://destinycommand.com',
             'setplayer' => 'x',
             'setaccount' => 'x',
             'setxur' => 'x',
             'trialsmap' => "'Trialsmap' command is in development",
             'nightfall' => "'Nightfall' command is in development",
             'elo' => "'ELO' command is in development",
-            'donate' => 'If you like the !destiny command and want to support: https://2g.be/u/donate (This money does NOT go to the streamer)',
+            // 'donate' => 'If you like the !destiny command and want to support: https://2g.be/u/donate (This money does NOT go to the streamer)',
         ];
     }
 }
